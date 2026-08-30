@@ -1,42 +1,72 @@
-import { diagnostic, readAll } from "./_store.mjs";
+import { store } from "./_store.mjs";
 
-const respond = (statusCode, body) => ({
-  statusCode,
-  headers: {
-    "Content-Type": "application/json",
-    "Cache-Control": "no-store"
-  },
-  body: JSON.stringify(body, null, 2)
-});
+export default async () => {
+  const siteID =
+    process.env.NETLIFY_SITE_ID ||
+    process.env.SITE_ID;
 
-export async function handler() {
-  const env = diagnostic();
-
-  if (!env.siteIDPresent || !env.tokenPresent) {
-    return respond(503, {
-      ok: false,
-      message: "Backend configuration incomplete",
-      environment: env,
-      nextStep: !env.tokenPresent
-        ? "Add NETLIFY_BLOBS_TOKEN in Netlify Environment Variables with Functions access, then redeploy."
-        : "Redeploy the project so Netlify injects SITE_ID into the Function runtime."
-    });
-  }
+  const token =
+    process.env.NETLIFY_BLOBS_TOKEN ||
+    process.env.NETLIFY_AUTH_TOKEN;
 
   try {
-    const orders = await readAll("tide-table-orders");
-    return respond(200, {
+    const testStore = store("health-check");
+
+    await testStore.setJSON("test", {
       ok: true,
-      message: "Tide Table backend is connected to Netlify Blobs.",
-      environment: env,
-      ordersStored: orders.length
+      time: new Date().toISOString(),
     });
+
+    const result = await testStore.get("test", {
+      type: "json",
+    });
+
+    return new Response(
+      JSON.stringify(
+        {
+          ok: true,
+          message: "Netlify Blobs connected",
+          environment: {
+            siteIDPresent: Boolean(siteID),
+            tokenPresent: Boolean(token),
+            siteName: process.env.SITE_NAME || null,
+            url: process.env.URL || null,
+          },
+          blobsWorking: Boolean(result),
+        },
+        null,
+        2
+      ),
+      {
+        status: 200,
+        headers: {
+          "content-type": "application/json",
+        },
+      }
+    );
   } catch (error) {
-    return respond(500, {
-      ok: false,
-      message: "Netlify Blobs connection failed",
-      environment: env,
-      error: error?.message || String(error)
-    });
+    return new Response(
+      JSON.stringify(
+        {
+          ok: false,
+          message: "Netlify Blobs connection failed",
+          environment: {
+            siteIDPresent: Boolean(siteID),
+            tokenPresent: Boolean(token),
+            siteName: process.env.SITE_NAME || null,
+            url: process.env.URL || null,
+          },
+          error: String(error?.message || error),
+        },
+        null,
+        2
+      ),
+      {
+        status: 500,
+        headers: {
+          "content-type": "application/json",
+        },
+      }
+    );
   }
-}
+};
