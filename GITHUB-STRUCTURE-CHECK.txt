@@ -1,0 +1,27 @@
+TIDE TABLE — GITHUB STRUCTURE CHECK
+
+At the TOP LEVEL of the repository:
+src/
+netlify/
+package.json
+index.html
+netlify.toml
+README.md
+manifest.webmanifest
+icon.svg
+
+Inside src/:
+main.jsx
+api.js
+config.js
+styles.css
+
+Inside netlify/functions/:
+_store.mjs
+health.mjs
+orders.mjs
+requests.mjs
+
+IMPORTANT:
+main.jsx must NOT be at the repository root.
+health.mjs, orders.mjs, requests.mjs and _store.mjs must NOT be at the repository root.
