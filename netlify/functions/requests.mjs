@@ -1,110 +1,43 @@
 import { readAll, writeAll } from "./_store.mjs";
 
-const jsonResponse = (body, status = 200) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: {
-      "Content-Type": "application/json",
-      "Cache-Control": "no-store",
-    },
-  });
+const json = (statusCode, body) => ({
+  statusCode,
+  headers: {"Content-Type":"application/json","Cache-Control":"no-store"},
+  body: JSON.stringify(body)
+});
 
-export default async (request) => {
-  try {
-    const method = request.method;
+export async function handler(event){
+  try{
+    const method = event.httpMethod;
     let requests = await readAll("tide-table-requests");
 
-    if (method === "GET") {
-      return jsonResponse({ requests });
-    }
+    if(method==="GET") return json(200,{requests});
 
-    if (method === "POST") {
-      const payload = await request.json();
-
-      if (
-        !payload.id ||
-        !payload.table ||
-        !payload.kind
-      ) {
-        return jsonResponse(
-          { error: "Invalid request" },
-          400
-        );
-      }
-
+    if(method==="POST"){
+      const payload = JSON.parse(event.body || "{}");
+      if(!payload.id || !payload.table || !payload.kind) return json(400,{error:"Invalid request"});
       requests.push(payload);
-
-      await writeAll(
-        "tide-table-requests",
-        requests
-      );
-
-      return jsonResponse(
-        {
-          ok: true,
-          request: payload,
-        },
-        201
-      );
+      await writeAll("tide-table-requests",requests);
+      return json(201,{ok:true,request:payload});
     }
 
-    if (method === "PUT") {
-      const { id, status } =
-        await request.json();
-
-      const index = requests.findIndex(
-        (item) => item.id === id
-      );
-
-      if (index < 0) {
-        return jsonResponse(
-          { error: "Request not found" },
-          404
-        );
-      }
-
-      requests[index] = {
-        ...requests[index],
-        status,
-        updatedAt: new Date().toISOString(),
-      };
-
-      await writeAll(
-        "tide-table-requests",
-        requests
-      );
-
-      return jsonResponse({
-        ok: true,
-        request: requests[index],
-      });
+    if(method==="PUT"){
+      const {id,status} = JSON.parse(event.body || "{}");
+      const i=requests.findIndex(r=>r.id===id);
+      if(i<0) return json(404,{error:"Request not found"});
+      requests[i]={...requests[i],status,updatedAt:new Date().toISOString()};
+      await writeAll("tide-table-requests",requests);
+      return json(200,{ok:true,request:requests[i]});
     }
 
-    if (method === "DELETE") {
-      await writeAll(
-        "tide-table-requests",
-        []
-      );
-
-      return jsonResponse({
-        ok: true,
-      });
+    if(method==="DELETE"){
+      await writeAll("tide-table-requests",[]);
+      return json(200,{ok:true});
     }
 
-    return jsonResponse(
-      { error: "Method not allowed" },
-      405
-    );
-  } catch (error) {
+    return json(405,{error:"Method not allowed"});
+  }catch(error){
     console.error(error);
-
-    return jsonResponse(
-      {
-        error:
-          error?.message ||
-          "Server error",
-      },
-      500
-    );
+    return json(500,{error:error.message || "Server error"});
   }
-};
+}
