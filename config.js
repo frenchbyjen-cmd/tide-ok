@@ -87,7 +87,11 @@ export const translations = {
     back:"Back to menu", orderMore:"Order more", waiter:"Call waiter", bill:"Ask for the bill",
     extras:"Choose your extras", add:"Add to order", total:"Total", table:"Table", search:"Search the menu",
     assistance:"I need assistance", water:"Water", cutlery:"Cutlery", other:"Other", sendRequest:"Send request",
-    billConfirm:"Would you like the bill for", confirm:"Confirm", cancel:"Cancel"
+    billConfirm:"Would you like the bill for", confirm:"Confirm", cancel:"Cancel",
+    billAndPayment:"Bill & payment", choosePayment:"Your bill is ready. How would you like to pay?", totalBill:"Total bill",
+    payInApp:"Pay in the app", payInAppSub:"Fast online payment — demo mode", payCardWaiter:"Pay by card to the waiter", payCardWaiterSub:"The waiter brings the card terminal",
+    payCashWaiter:"Pay cash to the waiter", payCashWaiterSub:"The waiter comes to collect payment", paymentNote:"Online card payment is prepared in the demo but still needs a real payment provider before going live.",
+    billRequested:"Bill requested", paymentChoiceSent:"Payment choice sent to the restaurant", onlinePaymentDemo:"Online payment selected — the restaurant has been notified"
   },
   fr: {
     welcome:"Bienvenue", viewMenu:"Voir le menu", yourOrder:"Votre commande", send:"Envoyer la commande",
@@ -95,7 +99,11 @@ export const translations = {
     back:"Retour au menu", orderMore:"Commander autre chose", waiter:"Appeler un serveur", bill:"Demander l’addition",
     extras:"Choisissez vos extras", add:"Ajouter", total:"Total", table:"Table", search:"Rechercher dans le menu",
     assistance:"J’ai besoin d’aide", water:"Eau", cutlery:"Couverts", other:"Autre", sendRequest:"Envoyer la demande",
-    billConfirm:"Souhaitez-vous l’addition pour", confirm:"Confirmer", cancel:"Annuler"
+    billConfirm:"Souhaitez-vous l’addition pour", confirm:"Confirmer", cancel:"Annuler",
+    billAndPayment:"Addition & paiement", choosePayment:"Votre addition est prête. Comment souhaitez-vous payer ?", totalBill:"Total de l’addition",
+    payInApp:"Payer dans l’app", payInAppSub:"Paiement en ligne rapide — mode démo", payCardWaiter:"Payer par carte au serveur", payCardWaiterSub:"Le serveur apporte le terminal de paiement",
+    payCashWaiter:"Payer en espèces au serveur", payCashWaiterSub:"Le serveur vient encaisser à votre table", paymentNote:"Le paiement par carte dans l’app est préparé dans la démo mais devra être connecté à un prestataire de paiement réel avant mise en production.",
+    billRequested:"Addition demandée", paymentChoiceSent:"Votre choix de paiement a été envoyé au restaurant", onlinePaymentDemo:"Paiement dans l’app sélectionné — le restaurant est prévenu"
   },
   es: {
     welcome:"Bienvenido", viewMenu:"Ver menú", yourOrder:"Tu pedido", send:"Enviar pedido",
@@ -103,6 +111,10 @@ export const translations = {
     back:"Volver al menú", orderMore:"Pedir algo más", waiter:"Llamar al camarero", bill:"Pedir la cuenta",
     extras:"Elige tus extras", add:"Añadir", total:"Total", table:"Mesa", search:"Buscar en el menú",
     assistance:"Necesito ayuda", water:"Agua", cutlery:"Cubiertos", other:"Otro", sendRequest:"Enviar solicitud",
-    billConfirm:"¿Quieres pedir la cuenta para", confirm:"Confirmar", cancel:"Cancelar"
+    billConfirm:"¿Quieres pedir la cuenta para", confirm:"Confirmar", cancel:"Cancelar",
+    billAndPayment:"Cuenta y pago", choosePayment:"Tu cuenta está lista. ¿Cómo quieres pagar?", totalBill:"Total de la cuenta",
+    payInApp:"Pagar en la app", payInAppSub:"Pago online rápido — modo demo", payCardWaiter:"Pagar con tarjeta al camarero", payCardWaiterSub:"El camarero trae el terminal de pago",
+    payCashWaiter:"Pagar en efectivo al camarero", payCashWaiterSub:"El camarero cobra en tu mesa", paymentNote:"El pago con tarjeta en la app está preparado en la demo, pero necesita conectarse a un proveedor de pago real antes de usarse en producción.",
+    billRequested:"Cuenta solicitada", paymentChoiceSent:"Tu forma de pago se ha enviado al restaurante", onlinePaymentDemo:"Pago en la app seleccionado — el restaurante ha sido avisado"
   }
 };
