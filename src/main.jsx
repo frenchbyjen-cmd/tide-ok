@@ -47,6 +47,8 @@ function Customer(){
   const [hasOrdered,setHasOrdered]=useState(localStorage.getItem(`tt-ordered-${table}`)==="1");
   const [requestOpen,setRequestOpen]=useState(false);
   const [billOpen,setBillOpen]=useState(false);
+  const [billLoading,setBillLoading]=useState(false);
+  const [billAmount,setBillAmount]=useState(0);
   const [toast,setToast]=useState("");
   const t = translations[lang || "en"];
 
@@ -89,10 +91,35 @@ function Customer(){
     }catch(e){ alert(`Could not send request.\n\n${e.message}`); }
   }
 
-  async function sendBill(){
+  async function openBill(){
+    setBillOpen(true);
+    setBillLoading(true);
     try{
-      await api("requests",{method:"POST",body:JSON.stringify({id:uid(),kind:"bill",table,reason:"Bill requested",status:"new",createdAt:new Date().toISOString()})});
-      setBillOpen(false); flash("Bill request sent");
+      const data = await api("orders");
+      const tableOrders = (data.orders || []).filter(o=>String(o.table)===String(table));
+      setBillAmount(tableOrders.reduce((sum,o)=>sum+Number(o.total||0),0));
+    }catch(e){
+      setBillAmount(0);
+    }finally{
+      setBillLoading(false);
+    }
+  }
+
+  async function sendBill(paymentMethod){
+    const paymentLabels = {
+      app: t.payInApp,
+      card_waiter: t.payCardWaiter,
+      cash_waiter: t.payCashWaiter
+    };
+    try{
+      await api("requests",{method:"POST",body:JSON.stringify({
+        id:uid(), kind:"bill", table, reason:t.billRequested, status:"new",
+        amount:billAmount, paymentMethod, paymentLabel:paymentLabels[paymentMethod],
+        paymentStatus: paymentMethod==="app" ? "payment_requested" : "pay_at_table",
+        createdAt:new Date().toISOString()
+      })});
+      setBillOpen(false);
+      flash(paymentMethod==="app" ? t.onlinePaymentDemo : t.paymentChoiceSent);
     }catch(e){ alert(`Could not request bill.\n\n${e.message}`); }
   }
   function flash(m){setToast(m);setTimeout(()=>setToast(""),2200)}
@@ -107,7 +134,7 @@ function Customer(){
     <button className="primary" onClick={()=>setSent(false)}>{t.back}</button>
     <div className="quick-actions">
       <button onClick={()=>{setSent(false);setRequestOpen(true)}}>{t.waiter}</button>
-      <button onClick={()=>{setSent(false);setBillOpen(true)}}>{t.bill}</button>
+      <button onClick={()=>{setSent(false);openBill()}}>{t.bill}</button>
     </div>
   </div>;
 
@@ -125,7 +152,7 @@ function Customer(){
       <strong>{t.table} {table}</strong>
       <button onClick={()=>window.scrollTo({top:300,behavior:"smooth"})}>＋ {t.orderMore}</button>
       <button onClick={()=>setRequestOpen(true)}>⌁ {t.waiter}</button>
-      <button onClick={()=>setBillOpen(true)}>⌑ {t.bill}</button>
+      <button onClick={()=>openBill()}>⌑ {t.bill}</button>
     </div>}
 
     <div className="search-wrap"><input value={query} onChange={e=>setQuery(e.target.value)} placeholder={t.search}/></div>
@@ -184,9 +211,28 @@ function Customer(){
     </Modal>}
 
     {billOpen && <Modal onClose={()=>setBillOpen(false)}>
-      <h2>{t.bill}</h2><p>{t.billConfirm} {t.table} {table}?</p>
-      <button className="primary" onClick={sendBill}>{t.confirm}</button>
-      <button className="secondary" onClick={()=>setBillOpen(false)}>{t.cancel}</button>
+      <div className="bill-modal">
+        <div className="eyebrow">{t.table} {table}</div>
+        <h2>{t.billAndPayment}</h2>
+        <p className="muted">{t.choosePayment}</p>
+        <div className="bill-summary">
+          <span>{t.totalBill}</span>
+          <strong>{billLoading ? "…" : money(billAmount)}</strong>
+        </div>
+        <div className="payment-options">
+          <button className="payment-option online" disabled={billLoading} onClick={()=>sendBill("app")}>
+            <span className="payment-icon">▣</span><span><strong>{t.payInApp}</strong><small>{t.payInAppSub}</small></span><b>›</b>
+          </button>
+          <button className="payment-option" disabled={billLoading} onClick={()=>sendBill("card_waiter")}>
+            <span className="payment-icon">▤</span><span><strong>{t.payCardWaiter}</strong><small>{t.payCardWaiterSub}</small></span><b>›</b>
+          </button>
+          <button className="payment-option" disabled={billLoading} onClick={()=>sendBill("cash_waiter")}>
+            <span className="payment-icon">◉</span><span><strong>{t.payCashWaiter}</strong><small>{t.payCashWaiterSub}</small></span><b>›</b>
+          </button>
+        </div>
+        <p className="payment-note">{t.paymentNote}</p>
+        <button className="secondary" onClick={()=>setBillOpen(false)}>{t.cancel}</button>
+      </div>
     </Modal>}
 
     {toast && <div className="toast">{toast}</div>}
@@ -294,7 +340,7 @@ function Staff(){
       <aside>
         <h2>Guest requests</h2>
         <div className="requests">
-          {activeReq.map(r=><article className={`request-card ${r.kind}`} key={r.id}><span>{r.kind==="bill"?"BILL REQUESTED":"WAITER REQUEST"}</span><h3>TABLE {r.table}</h3><p>{r.reason}</p><button onClick={()=>patchRequest(r.id)}>DONE</button></article>)}
+          {activeReq.map(r=><article className={`request-card ${r.kind}`} key={r.id}><span>{r.kind==="bill"?"BILL / PAYMENT":"WAITER REQUEST"}</span><h3>TABLE {r.table}</h3><p>{r.reason}</p>{r.kind==="bill"&&<><div className="staff-bill-total"><span>TOTAL</span><strong>{money(Number(r.amount||0))}</strong></div><div className={`payment-badge ${r.paymentMethod||""}`}>{r.paymentLabel||"Payment method not selected"}</div>{r.paymentMethod==="card_waiter"&&<small className="staff-hint">Bring card terminal to the table.</small>}{r.paymentMethod==="cash_waiter"&&<small className="staff-hint">Collect cash at the table.</small>}{r.paymentMethod==="app"&&<small className="staff-hint">Online payment selected — payment gateway to connect.</small>}</>}<button onClick={()=>patchRequest(r.id)}>DONE</button></article>)}
           {!activeReq.length&&<div className="empty">No active requests.</div>}
         </div>
       </aside>
